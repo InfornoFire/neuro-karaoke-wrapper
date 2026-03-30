@@ -206,7 +206,7 @@ private fun ApiPublicPlaylist.toPlaylist(): Playlist {
         id = id,
         title = name,
         description = createdBy?.let { "by $it" } ?: "",
-        coverUrl = coverUrl ?: previewCovers.firstOrNull() ?: "",
+        coverUrl = coverUrl ?: "",
         previewCovers = previewCovers,
         songCount = songCount
     )

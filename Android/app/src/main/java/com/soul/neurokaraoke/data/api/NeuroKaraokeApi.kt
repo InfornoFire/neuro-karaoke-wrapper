@@ -1,8 +1,11 @@
 package com.soul.neurokaraoke.data.api
 
+import android.util.JsonReader
 import com.soul.neurokaraoke.data.model.Artist
 import com.soul.neurokaraoke.data.model.Playlist
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
@@ -76,6 +79,7 @@ class NeuroKaraokeApi {
 
     // Lazy-loaded map of audio path → backend song ID for lyrics lookup
     private var songIdMap: Map<String, String>? = null
+    private val songIdMapMutex = Mutex()
 
     /**
      * Fetch playlist songs from API
@@ -295,7 +299,7 @@ class NeuroKaraokeApi {
     suspend fun fetchPublicPlaylists(): Result<List<ApiPublicPlaylist>> = withContext(Dispatchers.IO) {
         var connection: HttpURLConnection? = null
         try {
-            val url = URL("$API_URL/api/playlist/public")
+            val url = URL("$API_URL/api/playlist/public?startIndex=0&pageSize=500")
             connection = url.openConnection() as HttpURLConnection
             connection.requestMethod = "GET"
             connection.connectTimeout = 15000
@@ -595,8 +599,11 @@ class NeuroKaraokeApi {
      * Ensure the song ID map is built. Safe to call multiple times.
      */
     suspend fun ensureSongIdMap() {
-        if (songIdMap == null) {
-            buildSongIdMap()
+        if (songIdMap != null) return
+        songIdMapMutex.withLock {
+            if (songIdMap == null) {
+                buildSongIdMap()
+            }
         }
     }
 
@@ -617,6 +624,7 @@ class NeuroKaraokeApi {
 
     /**
      * Build the audioPath → songId lookup map from setlists.
+     * Uses streaming JsonReader to avoid loading the entire response into memory.
      */
     private suspend fun buildSongIdMap() = withContext(Dispatchers.IO) {
         var connection: HttpURLConnection? = null
@@ -628,21 +636,40 @@ class NeuroKaraokeApi {
             connection.readTimeout = 15000
 
             if (connection.responseCode == HttpURLConnection.HTTP_OK) {
-                val response = connection.inputStream.bufferedReader().use { it.readText() }
-                val jsonArray = JSONArray(response)
                 val map = mutableMapOf<String, String>()
-
-                for (i in 0 until jsonArray.length()) {
-                    val playlist = jsonArray.getJSONObject(i)
-                    val songs = playlist.optJSONArray("songListDTOs") ?: continue
-                    for (j in 0 until songs.length()) {
-                        val song = songs.getJSONObject(j)
-                        val songId = song.optString("id", "")
-                        val absolutePath = song.optString("absolutePath", "")
-                        if (songId.isNotBlank() && absolutePath.isNotBlank()) {
-                            map[absolutePath] = songId
+                val reader = JsonReader(connection.inputStream.bufferedReader())
+                reader.use {
+                    reader.beginArray() // top-level array of playlists
+                    while (reader.hasNext()) {
+                        reader.beginObject() // playlist object
+                        while (reader.hasNext()) {
+                            val key = reader.nextName()
+                            if (key == "songListDTOs") {
+                                reader.beginArray() // songs array
+                                while (reader.hasNext()) {
+                                    var songId = ""
+                                    var absolutePath = ""
+                                    reader.beginObject() // song object
+                                    while (reader.hasNext()) {
+                                        when (reader.nextName()) {
+                                            "id" -> songId = reader.nextString()
+                                            "absolutePath" -> absolutePath = reader.nextString()
+                                            else -> reader.skipValue()
+                                        }
+                                    }
+                                    reader.endObject()
+                                    if (songId.isNotBlank() && absolutePath.isNotBlank()) {
+                                        map[absolutePath] = songId
+                                    }
+                                }
+                                reader.endArray()
+                            } else {
+                                reader.skipValue()
+                            }
                         }
+                        reader.endObject()
                     }
+                    reader.endArray()
                 }
                 songIdMap = map
             } else {

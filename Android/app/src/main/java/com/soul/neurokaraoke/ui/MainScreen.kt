@@ -85,7 +85,6 @@ fun MainScreen(
     var showFullPlayer by remember { mutableStateOf(false) }
 
     val playerSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var showAlphaBanner by remember { mutableStateOf(true) }
     var songToAddToPlaylist by remember { mutableStateOf<Song?>(null) }
     val userPlaylistRepository = remember { UserPlaylistRepository(context) }
     val favoritesRepository = remember { FavoritesRepository(context) }
@@ -269,53 +268,6 @@ fun MainScreen(
                     onRadioListen = { playerViewModel.playRadio() },
                     onRadioStop = { playerViewModel.stopRadio() }
                 )
-
-                // Alpha banner at top
-                if (showAlphaBanner) {
-                    GlassCard(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 8.dp)
-                            .align(Alignment.TopCenter),
-                        backgroundAlpha = 0.92f,
-                        showGlow = true,
-                        glowRadius = 4.dp
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = 12.dp, top = 8.dp, bottom = 8.dp, end = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Info,
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "Alpha Version",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Text(
-                                    text = "This app is still in development. Report bugs and feedback to @aferil. on Discord!",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
-                                )
-                            }
-                            IconButton(onClick = { showAlphaBanner = false }) {
-                                Icon(
-                                    imageVector = Icons.Default.Close,
-                                    contentDescription = "Dismiss",
-                                    tint = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-                        }
-                    }
-                }
 
                 // Mini player at bottom
                 MiniPlayer(

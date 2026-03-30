@@ -214,7 +214,14 @@ fun NavGraph(
                 onToggleFavorite = { song -> favoritesRepository?.toggleFavorite(song, accessToken) },
                 onAddToPlaylist = onAddToPlaylist,
                 isRefreshing = isRefreshingFavorites,
-                onRefresh = onRefreshFavorites
+                onRefresh = onRefreshFavorites,
+                onPlayAll = {
+                    favoriteSongs.firstOrNull()?.let { onPlaySongWithQueue(it, favoriteSongs) }
+                },
+                onShuffleAll = {
+                    val shuffled = favoriteSongs.shuffled()
+                    shuffled.firstOrNull()?.let { onPlaySongWithQueue(it, shuffled) }
+                }
             )
         }
 

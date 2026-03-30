@@ -170,7 +170,7 @@ private fun PlaylistCard(
             ) {
                 if (playlist.previewCovers.isNotEmpty()) {
                     // 2x2 grid of cover images
-                    Column {
+                    Column(modifier = Modifier.fillMaxSize()) {
                         Row(modifier = Modifier.weight(1f)) {
                             Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
                                 AsyncImage(

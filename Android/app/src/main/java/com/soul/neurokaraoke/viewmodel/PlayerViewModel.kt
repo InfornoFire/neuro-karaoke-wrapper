@@ -664,7 +664,9 @@ class PlayerViewModel(
         // Enable shuffle mode
         mediaController?.let { controller ->
             if (!controller.shuffleModeEnabled) {
+                _uiState.value = _uiState.value.copy(isShuffleEnabled = true)
                 controller.shuffleModeEnabled = true
+                prefs.edit().putBoolean("shuffle_enabled", true).apply()
             }
         }
         playRandomSongFromAllPlaylists()
@@ -779,6 +781,9 @@ class PlayerViewModel(
     fun toggleShuffle() {
         val controller = mediaController ?: return
         val newShuffle = !controller.shuffleModeEnabled
+        // Update UI state FIRST so the onShuffleModeEnabledChanged listener
+        // doesn't mistake this for a service restart and revert it
+        _uiState.value = _uiState.value.copy(isShuffleEnabled = newShuffle)
         controller.shuffleModeEnabled = newShuffle
         prefs.edit().putBoolean("shuffle_enabled", newShuffle).apply()
     }

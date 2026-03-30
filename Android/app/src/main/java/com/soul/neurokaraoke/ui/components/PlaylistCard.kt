@@ -4,10 +4,17 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,16 +46,66 @@ fun PlaylistCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(1f)
+                    .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center
             ) {
-                AsyncImage(
-                    model = playlist.coverUrl,
-                    contentDescription = playlist.title,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .matchParentSize()
-                        .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                )
+                if (playlist.coverUrl.isNotBlank()) {
+                    // Preset cover image — show as single image
+                    AsyncImage(
+                        model = playlist.coverUrl,
+                        contentDescription = playlist.title,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else if (playlist.previewCovers.isNotEmpty()) {
+                    // No preset cover — show 2x2 mosaic grid
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        Row(modifier = Modifier.weight(1f)) {
+                            Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                                AsyncImage(
+                                    model = playlist.previewCovers.getOrNull(0) ?: "",
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
+                            Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                                AsyncImage(
+                                    model = playlist.previewCovers.getOrNull(1) ?: playlist.previewCovers.getOrNull(0) ?: "",
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
+                        }
+                        Row(modifier = Modifier.weight(1f)) {
+                            Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                                AsyncImage(
+                                    model = playlist.previewCovers.getOrNull(2) ?: playlist.previewCovers.getOrNull(0) ?: "",
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
+                            Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                                AsyncImage(
+                                    model = playlist.previewCovers.getOrNull(3) ?: playlist.previewCovers.getOrNull(0) ?: "",
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.MusicNote,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(48.dp)
+                    )
+                }
 
                 // NEW badge
                 if (playlist.isNew) {

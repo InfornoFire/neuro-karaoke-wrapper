@@ -95,6 +95,8 @@ class AuthRepository(context: Context) {
             val tokenConn = URL(DISCORD_TOKEN_URL).openConnection() as HttpURLConnection
             tokenConn.requestMethod = "POST"
             tokenConn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+            tokenConn.connectTimeout = 15000
+            tokenConn.readTimeout = 15000
             tokenConn.doOutput = true
 
             val postData = "client_id=$DISCORD_CLIENT_ID" +
@@ -121,32 +123,37 @@ class AuthRepository(context: Context) {
             val exchangeConn = URL(NEUROKARAOKE_TOKEN_EXCHANGE_URL).openConnection() as HttpURLConnection
             exchangeConn.requestMethod = "POST"
             exchangeConn.setRequestProperty("Content-Type", "application/json")
+            exchangeConn.connectTimeout = 15000
+            exchangeConn.readTimeout = 15000
             exchangeConn.doOutput = true
 
             val exchangeBody = JSONObject().put("accessToken", accessToken).toString()
             exchangeConn.outputStream.use { it.write(exchangeBody.toByteArray()) }
 
+            var jwt = ""
             if (exchangeConn.responseCode != HttpURLConnection.HTTP_OK) {
                 val errorBody = exchangeConn.errorStream?.bufferedReader()?.readText() ?: "Unknown error"
                 exchangeConn.disconnect()
                 Log.w("AuthRepository", "Token exchange failed (${exchangeConn.responseCode}): $errorBody")
                 // Fall back to Discord-only auth if exchange fails
-            }
+            } else {
+                val exchangeResponse = exchangeConn.inputStream.bufferedReader().readText()
+                exchangeConn.disconnect()
 
-            val exchangeResponse = exchangeConn.inputStream.bufferedReader().readText()
-            exchangeConn.disconnect()
-
-            // Response may be a raw JWT or JSON with a token field
-            val jwt = exchangeResponse.trim().let { raw ->
-                if (raw.startsWith("{")) {
-                    JSONObject(raw).optString("token", JSONObject(raw).optString("accessToken", ""))
-                } else {
-                    raw.removeSurrounding("\"")
+                // Response may be a raw JWT or JSON with a token field
+                jwt = exchangeResponse.trim().let { raw ->
+                    if (raw.startsWith("{")) {
+                        JSONObject(raw).optString("token", JSONObject(raw).optString("accessToken", ""))
+                    } else {
+                        raw.removeSurrounding("\"")
+                    }
                 }
             }
 
             // 3. Fetch user info from Discord
             val userConn = URL(DISCORD_USER_URL).openConnection() as HttpURLConnection
+            userConn.connectTimeout = 15000
+            userConn.readTimeout = 15000
             userConn.setRequestProperty("Authorization", "Bearer $accessToken")
 
             if (userConn.responseCode != HttpURLConnection.HTTP_OK) {
