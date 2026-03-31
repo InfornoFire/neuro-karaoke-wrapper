@@ -103,8 +103,9 @@ fun FavoritesScreen(
                     .background(
                         Brush.verticalGradient(
                             colors = listOf(
-                                MaterialTheme.colorScheme.background.copy(alpha = 0.3f),
-                                MaterialTheme.colorScheme.background.copy(alpha = 0.6f),
+                                MaterialTheme.colorScheme.background.copy(alpha = 0.1f),
+                                MaterialTheme.colorScheme.background.copy(alpha = 0.5f),
+                                MaterialTheme.colorScheme.background.copy(alpha = 0.85f),
                                 MaterialTheme.colorScheme.background
                             )
                         )
@@ -127,7 +128,7 @@ fun FavoritesScreen(
                     Icon(
                         imageVector = Icons.Default.Favorite,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
                         modifier = Modifier.size(80.dp)
                     )
 
@@ -153,8 +154,7 @@ fun FavoritesScreen(
             }
         } else {
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 100.dp)
+                modifier = Modifier.fillMaxSize()
             ) {
                 // Header section
                 item {
@@ -296,7 +296,7 @@ fun FavoritesScreen(
                                     .size(44.dp)
                                     .clip(CircleShape)
                                     .background(
-                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                        MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
                                         CircleShape
                                     )
                             ) {
@@ -314,7 +314,7 @@ fun FavoritesScreen(
                                     .size(44.dp)
                                     .clip(CircleShape)
                                     .background(
-                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                        MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
                                         CircleShape
                                     )
                             ) {
